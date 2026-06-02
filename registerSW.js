@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/proxy-mesh-arch-pwa/sw.js', { scope: '/proxy-mesh-arch-pwa/' })})}
