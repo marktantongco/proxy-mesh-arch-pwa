@@ -1,63 +1,46 @@
-import { useState, useRef, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
+import { useChat } from '@ai-sdk/react'
 import { motion, AnimatePresence } from 'motion/react'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-}
-
 const models = [
-  { id: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-  { id: 'claude-3-opus-20240229', label: 'Claude Opus 3' },
-  { id: 'claude-3-haiku-20240307', label: 'Claude Haiku 3' },
+  { id: 'nvidia/nemotron-3-nano-30b-a3b', label: 'Nemotron Nano 30B' },
+  { id: 'nvidia/nemotron-3-super-120b-a12b', label: 'Nemotron Super 120B' },
+  { id: 'nvidia/nemotron-nano-9b-v2', label: 'Nemotron Nano 9B v2' },
+  { id: 'nvidia/nemotron-nano-12b-v2-vl', label: 'Nemotron Nano 12B v2 VL' },
 ]
 
 export default function ChatSection() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [model, setModel] = useState(models[0].id)
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, append } =
+    useChat({
+      api: '/api/chat',
+      body: { model: 'nvidia/nemotron-3-nano-30b-a3b' },
+    })
+
   const listRef = useRef<HTMLDivElement>(null)
+  const modelRef = useRef<HTMLSelectElement>(null)
 
   useEffect(() => {
     listRef.current?.scrollTo(0, listRef.current.scrollHeight)
   }, [messages])
 
-  const send = async () => {
-    const msg = input.trim()
-    if (!msg || loading) return
+  const currentModel = modelRef.current?.value || 'nvidia/nemotron-3-nano-30b-a3b'
 
-    setInput('')
-    setMessages((prev) => [...prev, { role: 'user', content: msg }])
-    setLoading(true)
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+    handleSubmit(e, { body: { model: currentModel } })
+  }
 
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ message: msg, model }),
-      })
-
-      if (!res.ok) {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: `Error: ${res.status} ${res.statusText}` },
-        ])
-        return
-      }
-
-      const data = await res.json()
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: data.reply || '(no response)' },
+  const onModelChange = () => {
+    if (messages.length > 0) {
+      setMessages([
+        ...messages,
+        {
+          id: `system-${Date.now()}`,
+          role: 'assistant',
+          content: `Switched to ${modelRef.current?.selectedOptions[0]?.text || 'new model'}. Send a new message to use it.`,
+        },
       ])
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: 'Network error — is the proxy stack running?' },
-      ])
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -71,12 +54,12 @@ export default function ChatSection() {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Talk to{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon to-[#00ffcc]">
-              Claude
+              Nemotron
             </span>
           </h2>
           <p className="text-sm text-gray-500 font-mono">
-            proxied through the same architecture —
-            <span className="text-gray-400"> Browser → Vercel API → Claude</span>
+            proxied through Vercel AI Gateway —
+            <span className="text-gray-400"> Browser → API → NVIDIA</span>
           </p>
         </div>
 
@@ -88,8 +71,9 @@ export default function ChatSection() {
               <span className="os-dot bg-green-500" />
             </div>
             <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
+              ref={modelRef}
+              defaultValue="nvidia/nemotron-3-nano-30b-a3b"
+              onChange={onModelChange}
               className="bg-transparent text-[10px] font-mono text-neon border border-neon/20 rounded px-2 py-0.5 focus:outline-none focus:border-neon/40 cursor-pointer"
             >
               {models.map((m) => (
@@ -128,13 +112,13 @@ export default function ChatSection() {
                     }`}
                   >
                     <p className="font-mono text-[10px] text-muted mb-1">
-                      {m.role === 'user' ? 'You' : 'Claude'}
+                      {m.role === 'user' ? 'You' : 'Nemotron'}
                     </p>
                     <div className="whitespace-pre-wrap break-words">{m.content}</div>
                   </div>
                 </motion.div>
               ))}
-              {loading && (
+              {isLoading && messages[messages.length - 1]?.role === 'user' && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -158,28 +142,27 @@ export default function ChatSection() {
             </AnimatePresence>
           </div>
 
-          <div className="border-t border-white/5 p-3">
+          <form onSubmit={onSubmit} className="border-t border-white/5 p-3">
             <div className="flex gap-2">
               <input
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), send())}
-                placeholder="Ask Claude about the architecture..."
+                onChange={handleInputChange}
+                placeholder="Ask Nemotron about the architecture..."
                 className="flex-1 bg-cyber-light/50 border border-white/10 rounded px-3 py-2 text-sm text-gray-300 font-mono placeholder:text-gray-600 focus:outline-none focus:border-neon/30"
-                disabled={loading}
+                disabled={isLoading}
               />
               <button
-                onClick={send}
-                disabled={loading || !input.trim()}
+                type="submit"
+                disabled={isLoading || !input.trim()}
                 className="px-4 py-2 rounded bg-neon/10 border border-neon/20 text-neon text-sm font-mono hover:bg-neon/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Send
               </button>
             </div>
             <p className="mt-2 text-[10px] text-gray-600 font-mono text-center">
-              Messages are sent through the API route and proxied to Claude
+              Messages are sent through the API route and proxied to NVIDIA Nemotron
             </p>
-          </div>
+          </form>
         </div>
       </div>
     </section>

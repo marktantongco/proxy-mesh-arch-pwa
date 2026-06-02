@@ -1,6 +1,7 @@
-export const config = {
-  runtime: 'edge',
-}
+import { openai } from '@ai-sdk/openai'
+import { streamText } from 'ai'
+
+export const runtime = 'edge'
 
 export default async function handler(req) {
   if (req.method !== 'POST') {
@@ -20,45 +21,15 @@ export default async function handler(req) {
       })
     }
 
-    const modelName = model || 'claude-sonnet-4-20250514'
+    const modelName = model || 'nvidia/nemotron-3-nano-30b-a3b'
 
-    const apiKey = process.env.AI_GATEWAY_API_KEY
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'AI Gateway not configured' }), {
-        status: 500,
-        headers: { 'content-type': 'application/json' },
-      })
-    }
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: modelName,
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: message }],
-      }),
+    const result = streamText({
+      model: openai(modelName),
+      messages: [{ role: 'user', content: message.trim() }],
+      maxTokens: 1024,
     })
 
-    if (!response.ok) {
-      const err = await response.text()
-      return new Response(JSON.stringify({ error: 'Upstream API error' }), {
-        status: 502,
-        headers: { 'content-type': 'application/json' },
-      })
-    }
-
-    const data = await response.json()
-    const reply = data.content?.[0]?.text || ''
-
-    return new Response(JSON.stringify({ reply, model: modelName }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    })
+    return result.toDataStreamResponse()
   } catch (err) {
     return new Response(JSON.stringify({ error: 'Internal error' }), {
       status: 500,
