@@ -1,0 +1,8 @@
+#!/bin/bash
+SERVICE=${1:-mihomo}
+case "$SERVICE" in
+    xray|xray-core) sudo journalctl -u xray-core -f ;;
+    mihomo|clash) sudo journalctl -u mihomo-client -f ;;
+    v2raya) sudo journalctl -u v2raya -f ;;
+    *) echo "Usage: proxy-logs [xray|mihomo|v2raya]" ;;
+esac

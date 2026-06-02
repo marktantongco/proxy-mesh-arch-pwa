@@ -1,0 +1,17 @@
+[Unit]
+Description=Kiro Token Refresh Daemon
+Documentation=https://github.com/kiro-tokend/kiro-tokend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/kiro-tokend/run.sh
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

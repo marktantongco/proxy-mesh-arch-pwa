@@ -1,0 +1,11 @@
+#!/bin/bash
+echo "=== Proxy Status ==="
+echo "Xray-core:  $(systemctl is-active xray-core 2>/dev/null || echo 'inactive')"
+echo "Mihomo:     $(systemctl is-active mihomo-client 2>/dev/null || echo 'inactive')"
+echo "v2rayA:     $(systemctl is-active v2raya 2>/dev/null || echo 'inactive')"
+echo ""
+echo "=== Memory ==="
+ps -o pid,vsz,rss,comm -p $(pgrep -x xray) $(pgrep -x mihomo) 2>/dev/null || echo "No proxy processes"
+echo ""
+echo "=== Ports ==="
+ss -tuln | grep -E "(7890|7891|9090|10808|2017)" || echo "No proxy ports"

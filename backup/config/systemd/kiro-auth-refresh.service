@@ -1,0 +1,9 @@
+[Unit]
+Description=Kiro auth token refresh — syncs SSO token via kirolink
+Documentation=https://github.com/alexandeism/kirolink
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/x1/Documents/proxy/kirolink/kirolink refresh
+WorkingDirectory=/home/x1/Documents/proxy/kirolink

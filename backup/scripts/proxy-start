@@ -1,0 +1,33 @@
+#!/bin/bash
+FREE_MB=$(free -m | awk '/^Mem:/{print $7}')
+echo "Available RAM: ${FREE_MB}MB"
+
+if [ "$FREE_MB" -lt 800 ]; then
+    echo "CRITICAL: Less than 800MB free. Close applications first."
+    exit 1
+fi
+
+echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null 2>/dev/null || true
+sudo sysctl -w vm.swappiness=5 > /dev/null 2>/dev/null || true
+
+if ! pgrep -x xray > /dev/null; then
+    echo "Starting Xray-core..."
+    sudo systemctl start xray-core
+else
+    echo "Xray-core already running"
+fi
+
+sleep 1
+
+if ! pgrep -x mihomo > /dev/null; then
+    echo "Starting Mihomo..."
+    sudo systemctl start mihomo-client
+else
+    echo "Mihomo already running"
+fi
+
+echo ""
+echo "Proxy endpoints:"
+echo "  HTTP:   http://127.0.0.1:7890"
+echo "  SOCKS5: socks5://127.0.0.1:7891"
+echo "  Dashboard: http://127.0.0.1:9090"

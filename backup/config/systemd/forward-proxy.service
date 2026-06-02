@@ -1,0 +1,15 @@
+[Unit]
+Description=Forward Proxy — shared retry/rate-limit layer for OpenCode, Kiro, Owl
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/Documents/proxy/kiro-gateway/.venv/bin/python3 %h/Documents/proxy/kiro-gateway/forward_proxy.py
+WorkingDirectory=%h/Documents/proxy/kiro-gateway
+Restart=on-failure
+RestartSec=3
+# Proxy must NOT route through itself
+Environment=NO_PROXY=127.0.0.1,localhost
+
+[Install]
+WantedBy=default.target

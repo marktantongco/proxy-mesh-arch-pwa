@@ -1,0 +1,76 @@
+---
+title: Proxy Stack
+description: Complete proxy infrastructure — Mihomo → CLIProxyAPI → Antigravity → Anthropic
+category: proxy
+tags: [proxy, stack, orchestration, networking]
+icon: 📡
+---
+
+## Overview
+
+The proxy stack is a three-layer chain that routes all system traffic through a smart proxy system, ultimately providing free Claude Opus access to all applications system-wide.
+
+## Architecture
+
+```
+Traffic (any app) → Port 7890
+                         ↓
+                    ┌──────────┐
+                    │  Mihomo  │  Rule engine (32MB)
+                    │ :7890    │  Routes: CN→DIRECT, else→PROXY
+                    └────┬─────┘
+                         │ (SOCKS5)
+                    ┌────▼─────┐
+                    │ CLIProxy │  Proxy transformer (13MB)
+                    │ :8317    │  SOCKS5→HTTP API
+                    └────┬─────┘
+                         │
+                    ┌────▼─────┐
+                    │Antigravity│  Free Claude API
+                    │ (cloud)   │  Google OAuth
+                    └──────────┘
+                         │
+                    ┌────▼─────┐
+                    │ Anthropic │  Claude Opus/Sonnet
+                    │   API     │  4.0 models
+                    └──────────┘
+```
+
+## How It Works
+
+1. **App** makes a request to any network service
+2. **Mihomo** intercepts on port 7890, checks rules
+3. Non-CN traffic goes to **CLIProxyAPI** via SOCKS5
+4. **CLIProxyAPI** routes to **Antigravity** as HTTP API
+5. **Antigravity** proxies to **Anthropic API** using free auth
+
+## Startup Order
+
+```bash
+# 1. Antigravity auth (one-time)
+cli proxy login
+
+# 2. CLIProxyAPI (systemd user service)
+systemctl --user start cliproxyapi
+
+# 3. Mihomo (container or systemd)
+systemctl --user start mihomo
+```
+
+## Verification
+
+```bash
+# Check all services are running
+systemctl --user status cliproxyapi
+
+# Test the chain
+curl --socks5 localhost:7890 https://api.anthropic.com/v1/models
+
+# Direct API test through CLIProxyAPI
+curl http://localhost:8317/v1/models \
+  -H "Authorization: Bearer local-dev-key"
+```
+
+<Callout type="tip">
+Set `ALL_PROXY=socks5://localhost:7890` in your shell rc to route all terminal traffic through the stack.
+</Callout>

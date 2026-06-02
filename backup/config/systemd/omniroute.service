@@ -1,0 +1,22 @@
+[Unit]
+Description=OmniRoute - Free AI Gateway (160+ providers, auto-fallback)
+Documentation=https://github.com/diegosouzapw/OmniRoute
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/x1/.npm-global/bin/omniroute --no-open
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=PORT=20128
+Environment=HOME=%h
+Environment=PATH=%h/.npm-global/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=%h
+
+# OmniRoute stores data in ~/.omniroute
+ReadWritePaths=%h/.omniroute
+
+[Install]
+WantedBy=default.target

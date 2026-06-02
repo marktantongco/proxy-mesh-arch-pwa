@@ -1,0 +1,187 @@
+mixed-port: 7890
+socks-port: 7891
+allow-lan: false
+mode: rule
+log-level: warning
+ipv6: false
+external-controller: 127.0.0.1:9090
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  TUN Mode — Transparent Proxy                              ║
+# ║  STATUS: Designed, documented, DISABLED by default.         ║
+# ║                                                             ║
+# ║  Enable by setting `enable: true` below, then restart:      ║
+# ║    systemctl restart mihomo-client                          ║
+# ║                                                             ║
+# ║  Implications:                                              ║
+# ║  - Captures ALL system traffic (UDP, TCP, DNS)              ║
+# ║  - May need Docker adjustments (auto-route: false)          ║
+# ║  - Requires CAP_NET_ADMIN in systemd service               ║
+# ║  - ~5% perf overhead from gvisor network stack              ║
+# ╚══════════════════════════════════════════════════════════════╝
+tun:
+  enable: false
+  device: mihomo
+  stack: gvisor
+  dns-hijack:
+    - any:53
+  auto-route: true
+  auto-detect-interface: true
+
+dns:
+  enable: true
+  listen: 127.0.0.1:1053
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.opendns.com/dns-query
+  fallback:
+    - tls://8.8.8.8:853
+    - tls://1.1.1.1:853
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+  nameserver-policy:
+    "geosite:cn": https://dns.alidns.com/dns-query
+    "geosite:openai": tls://8.8.8.8:853
+    "geosite:anthropic": tls://8.8.8.8:853
+
+# =============================================================================
+# Proxy Providers (unchanged)
+# =============================================================================
+proxy-providers:
+  filtered_nodes:
+    type: file
+    path: /home/x1/.config/combined-proxy/valid_nodes_filtered.txt
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 300
+
+  orcaflow_china:
+    type: file
+    path: /home/x1/.config/combined-proxy/orcaflow_china_only.txt
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 60
+
+# =============================================================================
+# Proxy Groups (unchanged — 6 groups)
+# =============================================================================
+proxy-groups:
+  - name: "🌍 Global"
+    type: select
+    proxies:
+      - "🚀 Auto-Select"
+      - "DIRECT"
+    use:
+      - filtered_nodes
+
+  - name: "🤖 AI Services"
+    type: select
+    proxies:
+      - "🚀 Auto-Select"
+      - "DIRECT"
+    use:
+      - filtered_nodes
+
+  - name: "🚀 Auto-Select"
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    use:
+      - filtered_nodes
+
+  - name: "🇨🇳 China AI"
+    type: select
+    proxies:
+      - "🚀 Auto-Select"
+      - "DIRECT"
+    use:
+      - orcaflow_china
+
+  - name: "🎵 Spotify"
+    type: select
+    proxies:
+      - "🚀 Auto-Select"
+      - "DIRECT"
+    use:
+      - filtered_nodes
+
+  - name: "🛑 Block"
+    type: select
+    proxies:
+      - "REJECT"
+      - "DIRECT"
+
+# =============================================================================
+# Rules — GEOSITE (fast trie match) then DOMAIN-SUFFIX (manual overrides)
+# then GEOIP, then MATCH catch-all
+# =============================================================================
+rules:
+  # ─── GEOSITE: AI providers with dedicated categories ───
+  - GEOSITE,anthropic,🤖 AI Services
+  - GEOSITE,openai,🤖 AI Services
+
+  # ─── GEOSITE: Media ───
+  - GEOSITE,spotify,🎵 Spotify
+  - GEOSITE,tiktok,🛑 Block
+
+  # ─── GEOSITE: Domestic Chinese traffic → Direct ───
+  - GEOSITE,cn,DIRECT
+
+  # ─── DOMAIN-SUFFIX: International AI (no suitable geosite category) ───
+  - DOMAIN-SUFFIX,generativelanguage.googleapis.com,🤖 AI Services
+  - DOMAIN-SUFFIX,gemini.google.com,🤖 AI Services
+  - DOMAIN-SUFFIX,groq.com,🤖 AI Services
+  - DOMAIN-SUFFIX,perplexity.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,mistral.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,together.xyz,🤖 AI Services
+  - DOMAIN-SUFFIX,openrouter.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,api.fireworks.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,cerebras.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,deepinfra.com,🤖 AI Services
+  - DOMAIN-SUFFIX,cohere.com,🤖 AI Services
+  - DOMAIN-SUFFIX,x.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,inference.sh,🤖 AI Services
+  - DOMAIN-SUFFIX,cursor.com,🤖 AI Services
+  - DOMAIN-SUFFIX,huggingface.co,🤖 AI Services
+  - DOMAIN-SUFFIX,replicate.com,🤖 AI Services
+  - DOMAIN-SUFFIX,copilot.microsoft.com,🤖 AI Services
+  - DOMAIN-SUFFIX,venice.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,longcat.chat,🤖 AI Services
+  - DOMAIN-SUFFIX,stability.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,runwayml.com,🤖 AI Services
+  - DOMAIN-SUFFIX,elevenlabs.io,🤖 AI Services
+  - DOMAIN-SUFFIX,elevenlabs.com,🤖 AI Services
+  - DOMAIN-SUFFIX,character.ai,🤖 AI Services
+  - DOMAIN-SUFFIX,meta.ai,🤖 AI Services
+
+  # ─── DOMAIN-SUFFIX: China AI (explicit — overrides geosite:cn for proxy) ───
+  - DOMAIN-SUFFIX,deepseek.com,🇨🇳 China AI
+  - DOMAIN-SUFFIX,moonshot.cn,🇨🇳 China AI
+  - DOMAIN-SUFFIX,kimi.ai,🇨🇳 China AI
+  - DOMAIN-SUFFIX,bigmodel.cn,🇨🇳 China AI
+  - DOMAIN-SUFFIX,minimaxi.com,🇨🇳 China AI
+  - DOMAIN-SUFFIX,lingyiwanwu.com,🇨🇳 China AI
+  - DOMAIN-SUFFIX,zhipuai.cn,🇨🇳 China AI
+  - DOMAIN-SUFFIX,aliyun.com,🇨🇳 China AI
+
+  # ─── GEOIP: Domestic traffic handling ───
+  - GEOIP,CN,DIRECT
+  - GEOIP,private,DIRECT,no-resolve
+
+  # ─── Catch-all ───
+  - MATCH,🌍 Global

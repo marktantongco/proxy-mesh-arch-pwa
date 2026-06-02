@@ -1,0 +1,14 @@
+[Unit]
+Description=Kirolink — Anthropic proxy via CodeWhisperer (token-managed)
+Documentation=https://github.com/alexandeism/kirolink
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/x1/Documents/proxy/kirolink/kirolink server 8080
+WorkingDirectory=/home/x1/Documents/proxy/kirolink
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,4 @@
+#!/bin/bash
+sudo systemctl stop mihomo-client xray-core v2raya 2>/dev/null || true
+sudo sysctl -w vm.swappiness=60 > /dev/null 2>/dev/null || true
+echo "All proxy services stopped."

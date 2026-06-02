@@ -1,0 +1,58 @@
+---
+title: CLIProxyAPI
+description: Local proxy API server that transforms Antigravity into a standard SOCKS5 proxy
+category: proxy
+tags: [proxy, api, socks5, systemd]
+icon: 🔌
+---
+
+## Overview
+
+CLIProxyAPI runs as a **systemd user service** and serves as the bridge between Antigravity (Claude API) and the rest of the proxy stack. It exposes a SOCKS5 proxy on `127.0.0.1:8317` and routes traffic through Antigravity's Claude Opus endpoint.
+
+<Callout type="info">
+Service is running as a user systemd unit. Uses ~13MB RSS.
+</Callout>
+
+## Configuration
+
+<ConfigBlock filename="~/.config/cliproxyapi/config.yaml">
+port: 8317
+key: local-dev-key
+allowed_models:
+  - claude-sonnet-4-20250514
+  - claude-opus-4-20250514
+  - claude-3.5-sonnet
+</ConfigBlock>
+
+<Callout type="warning">
+The `key` is used as both the password for SOCKS5 auth and the API key for direct HTTP calls. Treat it like a credential.
+</Callout>
+
+## Usage
+
+### Direct API call
+```bash
+curl -X POST http://localhost:8317/v1/chat/completions \
+  -H "Authorization: Bearer local-dev-key" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"claude-sonnet-4-20250514","messages":[{"role":"user","content":"hello"}]}'
+```
+
+### Via SOCKS5 proxy
+```bash
+curl --socks5 localhost:8317 --proxy-user :local-dev-key https://api.anthropic.com/v1/messages ...
+```
+
+## Service Management
+
+```bash
+systemctl --user status cliproxyapi          # check status
+systemctl --user restart cliproxyapi         # restart
+journalctl --user -u cliproxyapi -f          # follow logs
+```
+
+## Related
+
+- Feeds from **Antigravity** (upstream Claude access)
+- Consumed by **Mihomo** as a SOCKS5 proxy group

@@ -1,0 +1,33 @@
+[Unit]
+Description=9Router - FREE AI Router & Token Saver (40+ providers)
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/decolua/9router
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/env sh -c 'until ping -c1 google.com >/dev/null 2>&1; do sleep 1; done'
+ExecStart=/usr/bin/env node /home/x1/.npm-global/lib/node_modules/9router/app/server.js
+Restart=on-failure
+RestartSec=5
+Environment=PORT=20128
+Environment=HOSTNAME=127.0.0.1
+Environment=NODE_ENV=production
+Environment=JWT_SECRET=5a7c69736ec1b71149380daa8b63efc8896490d664030c08c3d266185c8b7580
+Environment=INITIAL_PASSWORD=a7f3d2c1e5b8
+Environment=API_KEY_SECRET=sk-9router-local
+Environment=ENABLE_REQUEST_LOGS=true
+Environment=AUTH_COOKIE_SECURE=false
+Environment=REQUIRE_API_KEY=true
+Environment=BASE_URL=http://localhost:20128
+Environment=NEXT_PUBLIC_BASE_URL=http://localhost:20128
+Environment=NODE_PATH=/home/x1/.9router/runtime/node_modules:/home/x1/.npm-global/lib/node_modules/9router/app/node_modules
+# Qoder provider (OAuth client built into 9router, PAT for CLI access)
+Environment=QODER_PERSONAL_ACCESS_TOKEN=pt-1Y9OZbwgImjoJX5rHnBsjOSA_019e62d4-6b74-7383-9104-03d570c2cf5d
+# Proxy upstream through Mihomo
+Environment=HTTP_PROXY=http://127.0.0.1:7890
+Environment=HTTPS_PROXY=http://127.0.0.1:7890
+Environment=NO_PROXY=127.0.0.1,localhost
+
+[Install]
+WantedBy=default.target
