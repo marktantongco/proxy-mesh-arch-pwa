@@ -1,6 +1,5 @@
-import { useRef, useEffect } from 'react'
-import { useChat } from '@ai-sdk/react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion } from 'motion/react'
+import { useState } from 'react'
 
 const models = [
   { id: 'nvidia/nemotron-3-nano-30b-a3b', label: 'Nemotron Nano 30B' },
@@ -10,46 +9,14 @@ const models = [
 ]
 
 export default function ChatSection() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, append } =
-    useChat({
-      api: '/api/chat',
-      body: { model: 'nvidia/nemotron-3-nano-30b-a3b' },
-    })
-
-  const listRef = useRef<HTMLDivElement>(null)
-  const modelRef = useRef<HTMLSelectElement>(null)
-
-  useEffect(() => {
-    listRef.current?.scrollTo(0, listRef.current.scrollHeight)
-  }, [messages])
-
-  const currentModel = modelRef.current?.value || 'nvidia/nemotron-3-nano-30b-a3b'
-
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isLoading) return
-    handleSubmit(e, { body: { model: currentModel } })
-  }
-
-  const onModelChange = () => {
-    if (messages.length > 0) {
-      setMessages([
-        ...messages,
-        {
-          id: `system-${Date.now()}`,
-          role: 'assistant',
-          content: `Switched to ${modelRef.current?.selectedOptions[0]?.text || 'new model'}. Send a new message to use it.`,
-        },
-      ])
-    }
-  }
+  const [input, setInput] = useState('')
 
   return (
     <section className="py-20 md:py-32 px-4" id="chat">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8 text-center">
           <p className="font-mono text-neon text-xs tracking-widest uppercase mb-3">
-            Live Demo
+            Coming Soon
           </p>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Talk to{' '}
@@ -71,10 +38,9 @@ export default function ChatSection() {
               <span className="os-dot bg-green-500" />
             </div>
             <select
-              ref={modelRef}
               defaultValue="nvidia/nemotron-3-nano-30b-a3b"
-              onChange={onModelChange}
-              className="bg-transparent text-[10px] font-mono text-neon border border-neon/20 rounded px-2 py-0.5 focus:outline-none focus:border-neon/40 cursor-pointer"
+              disabled
+              className="bg-transparent text-[10px] font-mono text-muted border border-white/10 rounded px-2 py-0.5 cursor-not-allowed"
             >
               {models.map((m) => (
                 <option key={m.id} value={m.id} className="bg-cyber text-gray-300">
@@ -84,84 +50,66 @@ export default function ChatSection() {
             </select>
           </div>
 
-          <div
-            ref={listRef}
-            className="h-80 overflow-y-auto p-4 space-y-3 bg-[#0a0e27]/50"
-          >
-            {messages.length === 0 && (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-sm text-gray-600 font-mono">
-                  <span className="text-neon">$</span> Type a message to start
-                </p>
+          <div className="h-80 overflow-y-auto p-6 bg-[#0a0e27]/50 flex items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+              className="text-center max-w-md"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                <span className="font-mono text-[10px] text-yellow-400 uppercase tracking-wider">
+                  Awaiting Activation
+                </span>
               </div>
-            )}
-            <AnimatePresence initial={false}>
-              {messages.map((m, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
-                      m.role === 'user'
-                        ? 'bg-neon/10 border border-neon/20 text-gray-200'
-                        : 'bg-cyber-light/50 border border-white/5 text-gray-300'
-                    }`}
-                  >
-                    <p className="font-mono text-[10px] text-muted mb-1">
-                      {m.role === 'user' ? 'You' : 'Nemotron'}
-                    </p>
-                    <div className="whitespace-pre-wrap break-words">{m.content}</div>
-                  </div>
-                </motion.div>
-              ))}
-              {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-start"
-                >
-                  <div className="rounded-lg px-3 py-2 bg-cyber-light/50 border border-white/5">
-                    <div className="flex gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-neon/60 glow-pulse" />
+              <h3 className="text-lg font-semibold text-gray-200 mb-2">
+                Chat temporarily disabled
+              </h3>
+              <p className="text-xs text-gray-500 font-mono leading-relaxed">
+                The API route and streaming pipeline are deployed and ready.
+                The Vercel AI Gateway requires a credit card on file before
+                routing requests to NVIDIA Nemotron. Add a card in Vercel
+                settings to enable live chat.
+              </p>
+              <div className="mt-6 pt-4 border-t border-white/5">
+                <p className="text-[10px] text-gray-600 font-mono mb-2 uppercase tracking-wider">
+                  Stack ready
+                </p>
+                <div className="flex flex-wrap gap-1.5 justify-center">
+                  {['Vercel Edge', 'AI SDK', 'SSE Streaming', 'Nemotron'].map(
+                    (t) => (
                       <span
-                        className="w-2 h-2 rounded-full bg-neon/40 glow-pulse"
-                        style={{ animationDelay: '0.3s' }}
-                      />
-                      <span
-                        className="w-2 h-2 rounded-full bg-neon/20 glow-pulse"
-                        style={{ animationDelay: '0.6s' }}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                        key={t}
+                        className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/5 text-gray-400 border border-white/5"
+                      >
+                        {t}
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
+            </motion.div>
           </div>
 
-          <form onSubmit={onSubmit} className="border-t border-white/5 p-3">
+          <form className="border-t border-white/5 p-3 opacity-50 pointer-events-none">
             <div className="flex gap-2">
               <input
                 value={input}
-                onChange={handleInputChange}
-                placeholder="Ask Nemotron about the architecture..."
-                className="flex-1 bg-cyber-light/50 border border-white/10 rounded px-3 py-2 text-sm text-gray-300 font-mono placeholder:text-gray-600 focus:outline-none focus:border-neon/30"
-                disabled={isLoading}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Chat pending activation..."
+                disabled
+                className="flex-1 bg-cyber-light/50 border border-white/10 rounded px-3 py-2 text-sm text-gray-500 font-mono placeholder:text-gray-700 focus:outline-none cursor-not-allowed"
               />
               <button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="px-4 py-2 rounded bg-neon/10 border border-neon/20 text-neon text-sm font-mono hover:bg-neon/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                type="button"
+                disabled
+                className="px-4 py-2 rounded bg-white/5 border border-white/10 text-gray-600 text-sm font-mono cursor-not-allowed"
               >
                 Send
               </button>
             </div>
-            <p className="mt-2 text-[10px] text-gray-600 font-mono text-center">
-              Messages are sent through the API route and proxied to NVIDIA Nemotron
-            </p>
           </form>
         </div>
       </div>
