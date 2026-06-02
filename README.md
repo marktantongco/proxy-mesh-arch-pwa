@@ -359,6 +359,9 @@ All services use `Restart=on-failure` for self-healing.
 |------|-------|------------|
 | [`proxy-mesh-arch-pwa`](https://github.com/marktantongco/proxy-mesh-arch-pwa) (this) | Architecture docs & PWA | **You are here.** Reference docs, not installers. |
 | [`kiro-proxy-ecosystem`](https://github.com/marktantongco/kiro-proxy-ecosystem) | Operational ecosystem | Installers, scripts, MCP bridge, systemd units |
+| `kiro-stack` (local) | Unified installer | One-command setup for kiro-gateway + kirolink |
+| `kiro-owl-agent` (local) | OWL agent integration | OpenCode subagent model wiring |
+| `owl-agent-proxy` (local) | Proxy defense stack | Rate-limiting, caching, dedup |
 | [`antigravity-proxy-stack`](https://github.com/marktantongco/antigravity-proxy-stack) | Old Antigravity stack | Legacy — superseded by this architecture |
 
 ## License
