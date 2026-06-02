@@ -4,6 +4,12 @@
 
 An architectural reference documenting the currently-running proxy stack — a **hub-and-spoke mesh** that replaced the older linear-chain design. This repo contains the architecture docs, configuration backups, and an interactive PWA.
 
+## Live Demo
+
+- **Vercel:** https://proxy-mesh-arch-pwa-new.vercel.app
+- **GitHub Pages:** https://marktantongco.github.io/proxy-mesh-arch-pwa/
+- **Source:** https://github.com/marktantongco/proxy-mesh-arch-pwa
+
 ## Architecture
 
 ### The Shift: Linear Chain → Hub-and-Spoke Mesh
@@ -351,12 +357,9 @@ All services use `Restart=on-failure` for self-healing.
 
 | Repo | Focus | Difference |
 |------|-------|------------|
-| `proxy-mesh-arch` (this) | Architecture docs & PWA | **You are here.** Reference docs, not installers. |
-| `kiro-proxy-ecosystem` | Operational ecosystem | Installers, scripts, MCP bridge, systemd units |
-| `kiro-stack` | Unified installer | One-command setup for kiro-gateway + kirolink |
-| `kiro-owl-agent` | OWL agent integration | OpenCode subagent model wiring |
-| `owl-agent-proxy` | Proxy defense stack | Rate-limiting, caching, dedup |
-| `antigravity-proxy-stack` | Old Antigravity stack | Legacy — superseded by this architecture |
+| [`proxy-mesh-arch-pwa`](https://github.com/marktantongco/proxy-mesh-arch-pwa) (this) | Architecture docs & PWA | **You are here.** Reference docs, not installers. |
+| [`kiro-proxy-ecosystem`](https://github.com/marktantongco/kiro-proxy-ecosystem) | Operational ecosystem | Installers, scripts, MCP bridge, systemd units |
+| [`antigravity-proxy-stack`](https://github.com/marktantongco/antigravity-proxy-stack) | Old Antigravity stack | Legacy — superseded by this architecture |
 
 ## License
 
