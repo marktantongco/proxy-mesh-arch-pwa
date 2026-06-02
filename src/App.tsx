@@ -4,14 +4,12 @@ import StatsBar from './components/StatsBar'
 import ArchitectureDiagram from './components/ArchitectureDiagram'
 import TrafficFlow from './components/TrafficFlow'
 import EvolutionTimeline from './components/EvolutionTimeline'
-import ChatSection from './components/ChatSection'
 import Footer from './components/Footer'
 
 const tabs = [
   { id: 'architecture', label: 'Architecture' },
   { id: 'traffic', label: 'Traffic' },
   { id: 'evolution', label: 'Evolution' },
-  { id: 'chat', label: 'Chat' },
 ]
 
 export default function App() {
@@ -72,7 +70,6 @@ export default function App() {
       <ArchitectureDiagram />
       <TrafficFlow />
       <EvolutionTimeline />
-      <ChatSection />
       <Footer />
     </div>
   )
